@@ -16,14 +16,20 @@ router.get('/', (request, response, next) => {
 
   req.on('response', res => {
     res.on('data', chunk => {
-      const data = JSON.parse(chunk.toString());
+      const json = chunk.toString();
+      const data = JSON.parse(json);
       console.log(data);
       if (data.error) {
         // handle error.message
         console.error(data.error.message);
       } else {
         const quote = data.contents.quotes[0].quote;
+        console.log(quote);
         // handle quote
+        response.render('index', {
+          title: 'Welcome to Spirit Brew',
+          quote
+        });
       }
     });
 
