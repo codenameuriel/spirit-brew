@@ -18,17 +18,20 @@ router.get('/', (request, response, next) => {
     res.on('data', chunk => {
       const json = chunk.toString();
       const data = JSON.parse(json);
-      console.log(data);
+      console.log(data.contents);
       if (data.error) {
+        const { error } = data;
         // handle error.message
-        console.error(data.error.message);
+        console.error(error.message);
+        next(error);
       } else {
-        const quote = data.contents.quotes[0].quote;
+        const { quote, author } = data.contents.quotes[0];
         console.log(quote);
         // handle quote
         response.render('index', {
           title: 'Welcome to Spirit Brew',
-          quote
+          quote,
+          author
         });
       }
     });

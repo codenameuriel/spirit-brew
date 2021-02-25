@@ -10,6 +10,7 @@ const port = 9000;
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(quotesRouter);
 
 app.listen(port, () => {
@@ -18,5 +19,6 @@ app.listen(port, () => {
 
 // error handler 
 app.use((err, req, res, next) => {
-  res.render('error');
-})
+  const { message } = err;
+  res.render('error', { message });
+});
