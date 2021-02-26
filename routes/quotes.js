@@ -1,39 +1,34 @@
 const http = require('http');
 const express = require('express');
+
 const router = express.Router();
 
+// cache for requested quote
 let fetchedQuote = null;
+// use to compare days for fetching
 let today = new Date().getDay();
 
-router.get('/', (request, response, next) => {
+router.get('/', (req, res, next) => {
   // avoid exceeding api limit of 10 requests per hour
-  // quote varies by day, so only need to fetch once
+  // quote varies by day, so only need to fetch once per day
   if (!fetchedQuote || today !== new Date().getDay()) {
-    const quoteUrl = new URL('http://quotes.rest/qod.json?category=inspire');
-    const options = {
-      host: quoteUrl.hostname,
-      port: quoteUrl.port,
-      path: quoteUrl.pathname,
-      method: 'GET'
-    };
-    if (quoteUrl.search) options.path += `?${quoteUrl.search}`;
+    // create a client request
+    // URL object is converted into an options object by http.request
+    const options = new URL('http://quotes.rest/qod.json?category=inspire');
+    const quoteRequest = http.request(options);
 
-    const req = http.request(options);
+    quoteRequest.on('response', quoteRes => {
+      quoteRes.on('data', chunk => {
+        const jsonData = chunk.toString();
+        const parsedData = JSON.parse(jsonData);
 
-    req.on('response', res => {
-      res.on('data', chunk => {
-        const json = chunk.toString();
-        const data = JSON.parse(json);
-
-        if (data.error) {
-          const { error } = data;
-          next(error);
-        } else {
-          const { quote, author } = data.contents.quotes[0];
+        // pass down error to error handler
+        if (parsedData.error) next(parsedData.error);
+        else {
+          const { quote, author } = parsedData.contents.quotes[0];
           fetchedQuote = { quote, author };
-          console.log('fetchedQuote', fetchedQuote);
-          // handle quote
-          response.render('index', {
+          // render hbs template
+          res.render('index', {
             title: 'Welcome to Spirit Brew',
             quote,
             author
@@ -41,17 +36,15 @@ router.get('/', (request, response, next) => {
         }
       });
 
-      res.on('error', err => {
-        console.log(err, 'response error');
-      });
+      quoteRes.on('error', err => console.error(err, 'response error'));
     });
 
-    req.on('error', err => console.log(err, 'request error'))
-    req.end();
+    quoteRequest.on('error', err => console.error(err, 'request error'));
+    quoteRequest.end();
   } else {
     console.log('using cached quote data: fetchedQuote', fetchedQuote);
     // use cached quote data
-    response.render('index', { 
+    res.render('index', { 
       title: 'Welcome to Spirit Brew',
       ...fetchedQuote 
     });
