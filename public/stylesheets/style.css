@@ -1,8 +1,19 @@
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  background-color: whitesmoke;
+}
+
+.quote-container {
+  position: relative;
+  width: 50%;
 }
 
 #quote {
-  color: rgb(37, 138, 37);
+  color: rgb(105, 128, 108);
+}
+
+#author {
+  position: absolute;
+  right: 25%;
 }
