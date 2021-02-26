@@ -3,11 +3,12 @@ const express = require('express');
 const router = express.Router();
 
 let fetchedQuote = null;
+let today = new Date().getDay();
 
 router.get('/', (request, response, next) => {
   // avoid exceeding api limit of 10 requests per hour
   // quote varies by day, so only need to fetch once
-  if (!fetchedQuote) {
+  if (!fetchedQuote || today !== new Date().getDay()) {
     const quoteUrl = new URL('http://quotes.rest/qod.json?category=inspire');
     const options = {
       host: quoteUrl.hostname,
