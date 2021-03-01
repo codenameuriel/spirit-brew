@@ -3,15 +3,18 @@ const express = require('express');
 
 const router = express.Router();
 
+let { today, dateString } = require('../date');
+
 // cache for requested quote
 let fetchedQuote = null;
-// use to compare days for fetching
-let today = new Date().getDay();
 
 router.get('/', (req, res, next) => {
   // avoid exceeding api limit of 10 requests per hour
   // quote varies by day, so only need to fetch once per day
-  if (!fetchedQuote || today !== new Date().getDay()) {
+  if (!fetchedQuote || today.getDay() !== new Date().getDay()) {
+    // update date
+    today = new Date();
+
     // create a client request
     // URL object is converted into an options object by http.request
     const options = new URL('http://quotes.rest/qod.json?category=inspire');
@@ -31,7 +34,8 @@ router.get('/', (req, res, next) => {
           res.render('index', {
             title: 'Welcome to Spirit Brew',
             quote,
-            author
+            author,
+            dateString
           });
         }
       });
@@ -46,6 +50,7 @@ router.get('/', (req, res, next) => {
     // use cached quote data
     res.render('index', { 
       title: 'Welcome to Spirit Brew',
+      dateString,
       ...fetchedQuote 
     });
   }
